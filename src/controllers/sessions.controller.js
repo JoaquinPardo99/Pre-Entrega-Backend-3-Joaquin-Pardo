@@ -4,34 +4,35 @@ import jwt from "jsonwebtoken";
 import UserDTO from "../dto/User.dto.js";
 import { CustomError, ERROR_CODES } from "../utils/errors.js";
 
-const register = async (req, res, next) => {
+const register = async (req, res) => {
   try {
     const { first_name, last_name, email, password } = req.body;
 
-    if (!first_name || !last_name || !email || !password) {
-      req.logger.warning("Intento de registro con valores incompletos");
-      return next(
-        new CustomError(ERROR_CODES.INCOMPLETE_VALUES, "Incomplete values")
-      );
-    }
+    if (!first_name || !last_name || !email || !password)
+      return res
+        .status(400)
+        .send({ status: "error", error: "Incomplete values" });
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email))
+      return res
+        .status(400)
+        .send({ status: "error", error: "Invalid email format" });
 
     const exists = await usersService.getUserByEmail(email);
-    if (exists) {
-      req.logger.warning("Intento de registro con email ya existente");
-      return next(
-        new CustomError(ERROR_CODES.USER_ALREADY_EXISTS, "User already exists")
-      );
-    }
+    if (exists)
+      return res
+        .status(400)
+        .send({ status: "error", error: "User already exists" });
 
     const hashedPassword = await createHash(password);
     const user = { first_name, last_name, email, password: hashedPassword };
-
     let result = await usersService.create(user);
-    req.logger.info(`Usuario registrado: ${email}`);
+
     res.send({ status: "success", payload: result._id });
   } catch (error) {
-    req.logger.error(`Error en registro: ${error.message}`);
-    next(error);
+    req.logger?.error(`Error en registro: ${error.message}`);
+    res.status(500).send({ status: "error", error: error.message });
   }
 };
 
