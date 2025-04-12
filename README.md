@@ -1,4 +1,4 @@
-# Adoptme Backend - Proyecto Dockerizado 🐳
+# Proyecto Final Backend 3 - Joaquin Pardo
 
 Este proyecto contiene una API de mascotas y adopciones desarrollado con Express, MongoDB y Docker.
 
